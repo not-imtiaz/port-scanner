@@ -40,17 +40,28 @@ def main():
 
 target_ip = args.target
 
-try:
-    start_port, end_port = map(int, args.ports.split("-"))
-    ports_to_scan = range(start_port, end_port + 1)
-except ValueError:
-    print("Invalid port range. Please use the format 'start-end' (e.g., 1-1024).")
-    return
+   try:
+        start_port, end_port = map(int, args.ports.split("-"))
+        ports_to_scan = range(start_port, end_port + 1)
+    except ValueError:
+        print("Invalid port range. Please use the format 'start-end' (e.g., 1-1024).")
+        return
 
-print(
-    f"[*] Starting SYN scan on {target_ip} for ports {start_port}-{end_port} with {args.threads} threads.")
+    print(
+        f"[*] Starting SYN scan on {target_ip} for ports {start_port}-{end_port} with {args.threads} threads.")
 
 open_ports = []
 
 with ThreadPoolExecutor(max_workers=args.threads) as executor:
-    results = executor
+    results = executor.map(lambda port: check_port(
+        target_ip, port), ports_to_scan)
+
+    for port, status in results:
+        if status == "Open":
+            open_ports.append(port)
+            print(f"Port {port}: {status}")
+
+    print(f"[*] Scan completed. Open ports: {open_ports}")
+
+if __name__ == "__main__":
+    main()
