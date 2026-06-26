@@ -2,6 +2,8 @@ import argparse
 import logging
 from concurrent.futures import ThreadPoolExecutor
 from scapy.all import IP, TCP, sr1, send, conf
+import warnings
+warnings.filterwarnings("ignore", module="scapy")
 
 # Suppress Scapy's verbose console output and IPv6 warnings
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
