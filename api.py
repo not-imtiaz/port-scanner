@@ -61,12 +61,14 @@ def run_scan(req: ScanRequest):
         raise HTTPException(
             status_code=400, detail="Invalid port format. Use start-end (e.g., 1-1024)")
 
+    # materialise before executor consumes it
+    ports_list = list(ports_to_scan)
     open_ports = []
     closed_filtered = 0
 
     with ThreadPoolExecutor(max_workers=req.threads) as executor:
         results = executor.map(lambda p: check_port(
-            req.target_ip, p), ports_to_scan)
+            req.target_ip, p), ports_list)
 
         for port, status in results:
             if status == "Open":
@@ -77,9 +79,11 @@ def run_scan(req: ScanRequest):
             else:
                 closed_filtered += 1
 
+    open_ports.sort(key=lambda x: x["port"])   # return in ascending port order
+
     return {
         "target": req.target_ip,
-        "total_scanned": len(ports_to_scan),
+        "total_scanned": len(ports_list),
         "open_ports": open_ports,
         "closed_filtered": closed_filtered
     }
